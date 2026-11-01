@@ -29,7 +29,7 @@ button{cursor:pointer;border:0;background:none}
 .nav b{min-width:120px;text-align:center;text-transform:capitalize}
 .hero{border-radius:26px;padding:22px;color:#fff;background:linear-gradient(135deg,#5b6cff,#a855f7 55%,#ff7ab6);display:flex;gap:20px;align-items:center;flex-wrap:wrap;box-shadow:0 14px 34px rgba(120,80,220,.35);margin-bottom:16px}
 .hero .l{flex:1 1 220px}.hero small{opacity:.85}.hero .big{font-size:40px;font-weight:700;letter-spacing:-1px;line-height:1.1}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:flex-end}.cw{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:100%}.cl{font-size:10.5px;line-height:1.3;color:rgba(255,255,255,.85);padding-left:6px}
 .chip{background:rgba(255,255,255,.2);border-radius:20px;padding:5px 11px;font-size:13px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(6px)}
 .chip i{width:9px;height:9px;border-radius:50%;display:block}
 .hero svg{width:130px;height:130px;flex:none}
@@ -109,7 +109,6 @@ input,select{font-size:16px}button,.sw button,.pl{-webkit-tap-highlight-color:tr
 .emp{padding:8px 0}h2{margin:16px 2px 8px}
 #fl .it.inv{background:linear-gradient(90deg,color-mix(in srgb,#12b886 20%,transparent),color-mix(in srgb,#12b886 5%,transparent));border-radius:14px;margin:4px -6px;padding:7px 6px;border-top:0;border:1.5px dashed color-mix(in srgb,#12b886 55%,transparent)}#fl .it.inv>b:not(.n b){color:#0ca678}#fl .ivl{color:#0ca678;font-weight:600}
 
-.chn{font-size:11px;color:rgba(255,255,255,.8);margin:0 2px 8px;line-height:1.35}.chn:empty{display:none}
 
 .vr{margin:2px 0 12px;padding:9px 12px;border-left:5px solid #a855f7;border-radius:12px;background:color-mix(in srgb,#a855f7 10%,transparent);font-size:13px;line-height:1.35;color:var(--tx);cursor:pointer}.vr b{display:block;font-size:12px;color:#a855f7;margin-bottom:1px}
 
@@ -132,7 +131,7 @@ h2.sec{background:color-mix(in srgb,var(--c) 16%,transparent);border-left:6px so
 <div id="vs"><div class="qa"><div class="qr"><div class="amt"><span>€</span><input id="qm" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" onkeydown="if(event.key==='Enter')quick()"></div><div class="who" id="qw"></div></div>
 <div class="chs" id="qc"></div>
 <div class="qr"><input id="qn" placeholder="Nota (facoltativa)" onkeydown="if(event.key==='Enter')quick()"><button class="qb" onclick="quick()">Aggiungi</button></div></div>
-<div class="hero"><div class="l"><small>Speso nel mese</small><div class="big" id="tot"></div><div class="chn" id="chn"></div><div class="chips" id="chips"></div><div id="sal" onclick="setSal()"></div></div><svg viewBox="0 0 100 100" id="dn"></svg></div>
+<div class="hero"><div class="l"><small>Speso nel mese</small><div class="big" id="tot"></div><div class="chips" id="chips"></div><div id="sal" onclick="setSal()"></div></div><svg viewBox="0 0 100 100" id="dn"></svg></div>
 <div id="av"></div><div class="alerts" id="al"></div>
 <h2>Categorie <span><button class="pl" onclick="openM('cat')">+ Nuova categoria</button></span></h2>
 <div class="tiles" id="ct"></div>
@@ -361,8 +360,8 @@ function render(){
   else{const free=sa-fixT-bT-annT-onceT-annSet-onceSet-crSet-exT,days=pm(now.slice(0,10))===month?Math.round((new Date(y,m-1,26)-new Date(now.slice(0,10)+"T00:00:00"))/864e5)+1:0;
    $("#av").innerHTML=`<div class="fr${free<0?" neg":""}"><div><small>Ti restano da spendere</small><div class="bg">${eur(free)}</div>${free<0?"<small>Sei oltre il budget del mese</small>":days>0?`<small>circa ${eur(free/days)} al giorno per ${days} ${days===1?"giorno":"giorni"}</small>`:""}</div><div class="bk"><span>Stipendio ${eur(sa)}</span><span>− Fisse e bollette ${eur(fixT+bT)}</span><span>− Da accantonare ${eur(annSet+crSet+onceSet)} <small>(annuali, crociera, una tantum)</small></span><span>− Già speso ${eur(exT+annT+onceT)}</span></div></div>`}}
   const seg=[["Fisse",fixT,"#ffd43b"],["Variabili",exT,"#69f0ae"],["Bollette",bT,"#ff9f43"],["Annuali",annT,"#ffffff"],["Una tantum",onceT,"#ff7ab6"]];
-  $("#chips").innerHTML=seg.map(([n,v,c])=>`<div class="chip"><i style="background:${c}"></i>${n} ${eur(v)}</div>`).join("");
-  {const L=S.ann.flatMap(a=>annParts(a).filter(q=>q.paid===month).map(q=>esc(a.n)+(q.l?" ("+esc(q.l)+")":"")+" "+eur(q.amt)));$("#chn").textContent="";if(L.length)$("#chn").innerHTML="Annuali pagate in questo periodo:"+L.map(t=>"<div>• "+t+"</div>").join("")}
+  const AL=S.ann.flatMap(a=>annParts(a).filter(q=>q.paid===month).map(q=>esc(a.n)+(q.l?" ("+esc(q.l)+")":"")+" "+eur(q.amt)));
+  $("#chips").innerHTML=seg.map(([n,v,c])=>{const h=`<div class="chip"><i style="background:${c}"></i>${n} ${eur(v)}</div>`;return n==="Annuali"&&AL.length?`<div class="cw"><div class="cl">${AL.map(t=>"<div>"+t+"</div>").join("")}</div>${h}</div>`:h}).join("");
   let off=0;const C=2*Math.PI*38;
   $("#dn").innerHTML=`<circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="14"/>`+
    (tot?seg.map(([n,v,c])=>{const l=v/tot*C,s=`<circle cx="50" cy="50" r="38" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`;off+=l;return s}).join(""):"")+
