@@ -362,7 +362,7 @@ function render(){
    $("#av").innerHTML=`<div class="fr${free<0?" neg":""}"><div><small>Ti restano da spendere</small><div class="bg">${eur(free)}</div>${free<0?"<small>Sei oltre il budget del mese</small>":days>0?`<small>circa ${eur(free/days)} al giorno per ${days} ${days===1?"giorno":"giorni"}</small>`:""}</div><div class="bk"><span>Stipendio ${eur(sa)}</span><span>− Fisse e bollette ${eur(fixT+bT)}</span><span>− Da accantonare ${eur(annSet+crSet+onceSet)} <small>(annuali, crociera, una tantum)</small></span><span>− Già speso ${eur(exT+annT+onceT)}</span></div></div>`}}
   const seg=[["Fisse",fixT,"#ffd43b"],["Variabili",exT,"#69f0ae"],["Bollette",bT,"#ff9f43"],["Annuali",annT,"#ffffff"],["Una tantum",onceT,"#ff7ab6"]];
   $("#chips").innerHTML=seg.map(([n,v,c])=>`<div class="chip"><i style="background:${c}"></i>${n} ${eur(v)}</div>`).join("");
-  {const L=S.ann.flatMap(a=>annParts(a).filter(q=>q.paid===month).map(q=>esc(a.n)+(q.l?" ("+esc(q.l)+")":"")+" "+eur(q.amt)));$("#chn").textContent="";if(L.length)$("#chn").innerHTML="Annuali: "+L.join(" · ")}
+  {const L=S.ann.flatMap(a=>annParts(a).filter(q=>q.paid===month).map(q=>esc(a.n)+(q.l?" ("+esc(q.l)+")":"")+" "+eur(q.amt)));$("#chn").textContent="";if(L.length)$("#chn").innerHTML="Annuali pagate in questo periodo:"+L.map(t=>"<div>• "+t+"</div>").join("")}
   let off=0;const C=2*Math.PI*38;
   $("#dn").innerHTML=`<circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="14"/>`+
    (tot?seg.map(([n,v,c])=>{const l=v/tot*C,s=`<circle cx="50" cy="50" r="38" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`;off+=l;return s}).join(""):"")+
