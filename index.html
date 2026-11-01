@@ -372,7 +372,7 @@ function render(){
   $("#el").innerHTML=ex.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="it"><i class="cbar" style="background:${PC[x.who]||PC[0]}"></i><div class="av sq" title="${esc(S.names[x.who]||"")}" style="background-color:${(k=>k<0?"#b8b5c9":COL[k%COL.length])(S.cats.findIndex(c=>c.n===x.cat))}">${emo(S.cats.find(c=>c.n===x.cat)||{n:x.cat})}</div><div class="n" style="cursor:pointer" onclick="editExp('${x.id}')"><b>${esc(x.cat)}</b>${x.note?" · "+esc(x.note):""}<small>${x.date.slice(8)}/${x.date.slice(5,7)} · ${esc(S.names[x.who]||"?")}</small></div><b>${eur(x.amt)}</b><button class="x" onclick="delExp('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa in questo periodo</div>';
   $("#ft").textContent=eur(fixT)+"/mese";
   const FI={Mutuo:"home",Prestito:"bank",Abbonamento:"tv",Altro:"pin"};
-  $("#fl").innerHTML=S.fixed.map((x,i)=>`<div class="it" style="${sk(x)?"opacity:.55":""}"><div class="av sq" style="background-color:${COL[(i+3)%COL.length]}">${ic(fixIcon(x))}</div><div class="n"><b>${esc(x.n)}</b><small>${sk(x)?"Saltata in questo periodo":esc(x.t)}</small></div><b style="${sk(x)?"text-decoration:line-through":""}">${eur(x.amt)}</b><button class="sk" onclick="togSkip('${x.id}')">${sk(x)?"Ripristina":"Salta"}</button><button class="x" onclick="delFix('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa fissa</div>';
+  $("#fl").innerHTML=S.fixed.map((x,i)=>`<div class="it" style="${sk(x)?"opacity:.55":""}"><div class="av sq" style="background-color:${COL[(i+3)%COL.length]}">${ic(fixIcon(x))}</div><div class="n"><b>${esc(x.n)}</b><small>${sk(x)?"Saltata in questo periodo":esc(x.t)+(x.sc?" · scadenza "+esc(x.sc):"")}</small></div><b style="${sk(x)?"text-decoration:line-through":""}">${eur(x.amt)}</b><button class="sk" onclick="togSkip('${x.id}')">${sk(x)?"Ripristina":"Salta"}</button><button class="x" onclick="delFix('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa fissa</div>';
   $("#sv").textContent=eur(pendT/12);
   $("#sd").textContent=pend.length?`${pend.length} spese da pagare · ${eur(pendT)} in tutto`:"Tutto pagato";
   $("#an").innerHTML=S.ann.map(x=>{const P=annParts(x),tt=P.reduce((s,q)=>s+q.amt,0),lf=P.filter(q=>!q.paid).reduce((s,q)=>s+q.amt,0);
@@ -425,7 +425,7 @@ function drawM(){
   const A='<input id="a" type="text" inputmode="decimal" placeholder="Importo €">';
   const F={once:`<input id="t" placeholder="Nome (es. Condizionatore, Caldaia)">${A}<small style="color:var(--mu)">Entro quando vuoi pagarla? (facoltativo: calcolo quanto mettere da parte ogni mese)</small><input id="mo" type="month">`,bill:`<input id="t" placeholder="Nome (Luce, Gas, Acqua…)"><input id="a" type="text" inputmode="decimal" placeholder="Stima per ogni bolletta €"><select id="cy"><option value="1">Arriva ogni mese</option><option value="2">Arriva ogni 2 mesi</option><option value="3">Arriva ogni 3 mesi</option></select>`,breal:`<b>Bolletta ricevuta: ${esc((bl().find(b=>b.id===bid)||{}).n||"")}</b><input id="a" type="text" inputmode="decimal" placeholder="Importo della bolletta €"><input id="dt" type="date" value="${now.slice(0,10)}">`,pay:`<input id="a" type="text" inputmode="decimal" placeholder="Importo pagato €"><input id="dt" type="date" value="${now.slice(0,10)}"><input id="t" placeholder="Nota (es. acconto)">`,evt:`<input id="t" placeholder="Titolo (es. Dentista)"><input id="dt" type="date" value="${sd}"><input id="tm" type="time"><select id="w">${S.names.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}<option value="2">Insieme</option></select>`,
    exp:`<select id="w">${S.names.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}</select><select id="c">${S.cats.map(c=>`<option>${esc(c.n)}</option>`).join("")}</select>${A}<input id="t" placeholder="Nota (facoltativa)">`,
-   fix:`<input id="t" placeholder="Nome (mutuo, Netflix…)"><select id="c"><option>Mutuo</option><option>Prestito</option><option>Abbonamento</option><option>Altro</option></select>${A}`,
+   fix:`<input id="t" placeholder="Nome (mutuo, Netflix…)"><select id="c"><option>Mutuo</option><option>Prestito</option><option>Abbonamento</option><option>Altro</option></select>${A}<input id="sc" placeholder="Scadenza (facoltativa, es. giugno 2028)">`,
    ann:`<input id="t" placeholder="Nome (bollo, spazzatura, assicurazione…)" onchange="drawParts()">${A.replace("Importo","Importo annuo totale")}<select id="np" onchange="drawParts()"><option value="1">Pagamento unico</option><option value="2">2 rate o parti (es. 2 auto)</option><option value="3">3 rate</option><option value="4">4 rate</option><option value="6">6 rate</option><option value="12">12 rate</option></select><div id="pp" class="f"></div>`,
    cat:`<input id="t" placeholder="Nome categoria"><select id="e"><option value="">Icona automatica</option><option value="cart">Spesa</option><option value="car">Auto</option><option value="smile">Svago</option><option value="heart">Salute</option><option value="home">Casa</option><option value="star">Bambini</option><option value="plane">Viaggi</option><option value="zap">Utenze</option><option value="tag">Altro</option></select><input id="a" type="text" inputmode="decimal" placeholder="Massimale €/mese">`}[tab];
   $("#fm").innerHTML=F+`<div id="er" style="color:#ef476f;font-size:13px"></div><button class="go" onclick="submitM2()">Aggiungi</button>`;
@@ -457,7 +457,7 @@ function submitM2(){
   else if(tab==="evt"){evs().push({id:uid(),d:g("dt")||sd,t,time:g("tm"),who:+g("w")});sd=g("dt")||sd;cm=sd.slice(0,7)}
   else if(tab==="exp"&&eid){const x=S.exp.find(e=>e.id===eid);if(x){x.who=+g("w");x.cat=g("c");x.amt=a;x.note=t}eid=null}
   else if(tab==="exp"){S.exp.push({id:uid(),who:+g("w"),cat:g("c"),amt:a,note:t,date:month===pm(now.slice(0,10))?now.slice(0,10):month+"-15"});checkCap(g("c"),a)}
-  else if(tab==="fix"){S.fixed.push({id:uid(),n:t,t:g("c"),amt:a})}
+  else if(tab==="fix"){S.fixed.push({id:uid(),n:t,t:g("c"),amt:a,sc:g("sc").trim()})}
   else if(tab==="ann"){const it=buildAnn(t,a,+g("np")||1,partVals(0),partVals(1),aid&&S.ann.find(x=>x.id===aid));if(aid){S.ann[S.ann.findIndex(x=>x.id===aid)]=it}else S.ann.push(it);aid=null}
   else{S.cats.push({n:t,cap:a>0?a:0,e:g("e")})}
   $("#dg").close();save();
@@ -465,7 +465,7 @@ function submitM2(){
 function submitM(){
   const g=id=>$("#"+id)?$("#"+id).value:"",a=+g("a").replace(",","."),t=g("t").trim();
   if(tab==="exp"){if(!a)return;const d=new Date();S.exp.push({id:uid(),who:+g("w"),cat:g("c"),amt:a,note:t,date:month===pm(now.slice(0,10))?now.slice(0,10):month+"-15"});checkCap(g("c"),a)}
-  else if(tab==="fix"){if(!a||!t)return;S.fixed.push({id:uid(),n:t,t:g("c"),amt:a})}
+  else if(tab==="fix"){if(!a||!t)return;S.fixed.push({id:uid(),n:t,t:g("c"),amt:a,sc:g("sc").trim()})}
   else if(tab==="ann"){if(!a||!t)return;S.ann.push({id:uid(),n:t,amt:a,paid:null})}
   else{if(!t)return;S.cats.push({n:t,cap:a||0,e:g("e").trim()})}
   $("#dg").close();save();
@@ -487,7 +487,7 @@ function cfok(){$("#cf").close();const f=cfn;cfn=null;if(f)f()}
   Object.keys(N).forEach(k=>{const o=window[k];if(typeof o!=="function")return;
     window[k]=function(a,e){if(noC)return o(a,e);if(k==="delCat"&&e&&e.stopPropagation)e.stopPropagation();const w=N[k](a);if(!w)return o(a,e);ask("Eliminare "+w+"?"+(k==="delCat"?"":" Non si può annullare."),()=>o(a,e))}})
 })();
-const _r=render;render=function(){try{chkSal()}catch(e){}try{const h=+now.slice(11,13);$("#gr").textContent=(h<12?"Buongiorno":h<18?"Buon pomeriggio":"Buonasera")+", "+S.names[0]+" & "+S.names[1]+" ♥"}catch(e){}if(S.names[0]==="Io"&&S.names[1]==="Moglie"){S.names=["Anto","Debby"];setTimeout(save,0)}_r();try{renderCal()}catch(e){}try{renderCr()}catch(e){}try{renderQA()}catch(e){}try{renderBills()}catch(e){}try{renderOnce()}catch(e){}};
+const _r=render;render=function(){try{chkSal()}catch(e){}try{if(metaLoaded&&last.fixed!==undefined){const m=S.fixed.find(x=>/^mobili$/i.test(x.n)&&!x.sc);if(m){m.sc="giugno 2028";setTimeout(save,0)}}}catch(e){}try{const h=+now.slice(11,13);$("#gr").textContent=(h<12?"Buongiorno":h<18?"Buon pomeriggio":"Buonasera")+", "+S.names[0]+" & "+S.names[1]+" ♥"}catch(e){}if(S.names[0]==="Io"&&S.names[1]==="Moglie"){S.names=["Anto","Debby"];setTimeout(save,0)}_r();try{renderCal()}catch(e){}try{renderCr()}catch(e){}try{renderQA()}catch(e){}try{renderBills()}catch(e){}try{renderOnce()}catch(e){}};
 $("#lg").innerHTML=ic("hh");$("#fb").innerHTML=ic("plus");$("#fb").style.display="none";
 render();
 </script>
