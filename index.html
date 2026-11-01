@@ -107,6 +107,8 @@ input,select{font-size:16px}button,.sw button,.pl{-webkit-tap-highlight-color:tr
 .ann{gap:8px}.ac{padding:8px 10px;border-radius:16px;gap:8px}.ac .ck{width:24px;height:24px}.ac .ck svg{width:14px;height:14px}.ac .n{font-size:13px}.ac .n small{font-size:11px}
 .tiles{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}.tile{padding:8px 6px;border-radius:16px}.ring{width:54px;height:54px;margin:2px auto 4px}.ring span svg{width:24px;height:24px}.tile b{font-size:13px}.tile small{font-size:11px}
 .emp{padding:8px 0}h2{margin:16px 2px 8px}
+.vr{margin:2px 0 12px;padding:9px 12px;border-left:5px solid #a855f7;border-radius:12px;background:color-mix(in srgb,#a855f7 10%,transparent);font-size:13px;line-height:1.35;color:var(--tx);cursor:pointer}.vr b{display:block;font-size:12px;color:#a855f7;margin-bottom:1px}
+
 h2.sec{background:color-mix(in srgb,var(--c) 16%,transparent);border-left:6px solid var(--c);border-radius:14px;padding:9px 12px;margin:34px 0 10px;align-items:center;box-shadow:0 -14px 0 -12px color-mix(in srgb,var(--c) 40%,transparent)}
 .two>div:first-child h2.sec{margin-top:24px}
 
@@ -121,6 +123,7 @@ h2.sec{background:color-mix(in srgb,var(--c) 16%,transparent);border-left:6px so
 <main>
 <div class="top"><div><h1><span class="logo" id="lg"></span><span class="ttl">Casa GUIDA</span><button class="cdp" id="cdp" onclick="view('k')" hidden></button><span class="cdp" id="cdg" hidden></span></h1><div id="gr" class="gr"></div><small id="rg"></small></div>
 <div class="nav"><button onclick="shift(-1)">‹</button><b id="mn"></b><button onclick="shift(1)">›</button></div></div>
+<div class="vr" id="vr" onclick="nextV()"></div>
 <div class="sw"><button id="s1" class="on" onclick="view('s')">Spese</button><button id="s2" onclick="view('c')">Calendario</button><button id="s3" onclick="view('k')">Crociera</button></div>
 <div id="vs"><div class="qa"><div class="qr"><div class="amt"><span>€</span><input id="qm" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" onkeydown="if(event.key==='Enter')quick()"></div><div class="who" id="qw"></div></div>
 <div class="chs" id="qc"></div>
@@ -229,6 +232,11 @@ function listen(){
   setTimeout(async()=>{try{if(!DB||!metaLoaded)return;if(!(S.fixed.length||S.ann.length||S.exp.length))return;const day=now.slice(0,10);let done=null;try{done=localStorage.getItem("bkday")}catch(e){}if(done===day)return;const id="d"+(Math.floor(Date.parse(day)/864e5)%14);await DB.collection("bk").doc(id).set({day,at:now,data:J(S)});try{localStorage.setItem("bkday",day)}catch(e){}}catch(e){}},10000);
 }catch(e){mode="errore";whyLocal=String(e&&(e.code||e.message)||e).slice(0,60);metaLoaded=true;status()}})();
 document.querySelectorAll("h2").forEach(h=>{const d=h.querySelector(".dt2");if(d){h.classList.add("sec");h.style.setProperty("--c",d.style.background)}});
+const VER=[["Salmo 145:18","Geova è vicino a tutti quelli che lo invocano, a quelli che lo invocano con sincerità."],["Isaia 41:10","Non avere paura, perché io sono con te: ti darò forza e ti sosterrò."],["Salmo 34:18","Geova è vicino a chi ha il cuore spezzato e salva chi è affranto."],["Giacomo 4:8","Avvicinatevi a Dio, ed egli si avvicinerà a voi."],["Salmo 46:1","Dio è per noi un rifugio e una forza, un aiuto sempre pronto nei momenti difficili."],["Filippesi 4:6, 7","Non angustiatevi: dite a Dio le vostre richieste, e la sua pace custodirà il vostro cuore."],["Salmo 121:2","Il mio aiuto viene da Geova, che ha fatto il cielo e la terra."],["1 Pietro 5:7","Mettete su di lui ogni vostra preoccupazione, perché ha cura di voi."],["Deuteronomio 31:6","Siate forti e coraggiosi: Geova sarà con voi, non vi lascerà e non vi abbandonerà."],["Salmo 55:22","Affida a Geova il tuo peso, ed egli ti sosterrà."]];
+let vi=Math.floor(Date.parse(now.slice(0,10))/864e5)%VER.length;
+function showV(){const v=VER[vi];$("#vr").innerHTML="<b>"+v[0]+"</b>"+v[1]}
+function nextV(){vi=(vi+1)%VER.length;showV()}
+showV();
 $("#bkb").hidden=false;
 function backup(){try{const bl=new Blob([J(S,null,2)],{type:"application/json"}),u=URL.createObjectURL(bl),l=document.createElement("a");l.href=u;l.download="spese-casa-backup-"+now.slice(0,10)+".json";document.body.appendChild(l);l.click();setTimeout(()=>{l.remove();URL.revokeObjectURL(u)},4000)}catch(e){}}
 function askCode(){return new Promise(res=>{const d=document.createElement("div");d.style.cssText="position:fixed;inset:0;z-index:99;background:#0f0b24;display:flex;align-items:center;justify-content:center;padding:24px";d.innerHTML='<div style="max-width:340px;width:100%;color:#fff;font:16px system-ui;text-align:center"><div style="font-size:22px;font-weight:800;margin-bottom:10px">Casa GUIDA</div><div style="opacity:.8;margin-bottom:16px">Scrivi il codice di famiglia. Va scritto uguale sui due telefoni.</div><input id="fcin" autocapitalize="off" autocomplete="off" style="width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:0;font-size:17px;text-align:center"><button id="fcok" style="margin-top:14px;width:100%;padding:14px;border-radius:12px;border:0;background:#5b6cff;color:#fff;font-size:17px;font-weight:700">Entra</button></div>';document.body.appendChild(d);const go=()=>{const v=d.querySelector("#fcin").value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,"");if(v.length<4){d.querySelector("#fcin").style.outline="2px solid #ef476f";return}d.remove();res(v)};d.querySelector("#fcok").onclick=go})}
