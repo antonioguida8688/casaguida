@@ -107,6 +107,7 @@ input,select{font-size:16px}button,.sw button,.pl{-webkit-tap-highlight-color:tr
 .ann{gap:8px}.ac{padding:8px 10px;border-radius:16px;gap:8px}.ac .ck{width:24px;height:24px}.ac .ck svg{width:14px;height:14px}.ac .n{font-size:13px}.ac .n small{font-size:11px}
 .tiles{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}.tile{padding:8px 6px;border-radius:16px}.ring{width:54px;height:54px;margin:2px auto 4px}.ring span svg{width:24px;height:24px}.tile b{font-size:13px}.tile small{font-size:11px}
 .emp{padding:8px 0}h2{margin:16px 2px 8px}
+.it .ck.on{background:#12b886;border-color:#12b886;color:#fff}#fl .it .ck{margin-right:6px}
 #fl .it.inv{background:linear-gradient(90deg,color-mix(in srgb,#12b886 20%,transparent),color-mix(in srgb,#12b886 5%,transparent));border-radius:14px;margin:4px -6px;padding:7px 6px;border-top:0;border:1.5px dashed color-mix(in srgb,#12b886 55%,transparent)}#fl .it.inv>b:not(.n b){color:#0ca678}#fl .ivl{color:#0ca678;font-weight:600}
 
 
@@ -366,6 +367,8 @@ const FIR=[[/jw/i,"jw"],[/contribu|donaz|offert|benefic/i,"gift"],[/investiment|
 const INV=/investiment|risparm|accantonam|pension|\betf\b/i;
 const fixIcon=x=>(FIR.find(([r])=>r.test(x.n))||[0,({Mutuo:"home",Prestito:"bank",Abbonamento:"tv"})[x.t]||"pin"])[1];
 const sk=x=>(x.skip||[]).includes(month);
+const isOk=x=>(x.ok||[]).includes(month);
+function togOk(id){const x=S.fixed.find(f=>f.id===id);if(!x)return;x.ok=x.ok||[];const i=x.ok.indexOf(month);if(i<0)x.ok.push(month);else x.ok.splice(i,1);save()}
 function togSkip(id){const x=S.fixed.find(f=>f.id===id);if(!x)return;x.skip=x.skip||[];const i=x.skip.indexOf(month);if(i<0)x.skip.push(month);else x.skip.splice(i,1);save()}
 function delFix(id){S.fixed=S.fixed.filter(x=>x.id!==id);save()}
 function delAnn(id){S.ann=S.ann.filter(x=>x.id!==id);save()}
@@ -419,9 +422,9 @@ function render(){
     return `<div class="tile" style="--c:${col};--b:${COL[i%COL.length]}" onclick="setCap(${i})"><button class="x" onclick="delCat(${i},event)">✕</button>${ring(col,p,emo(c))}<b>${esc(c.n)}</b><small>${eur(t)}${c.cap?" / "+eur(c.cap):""}</small>${c.cap?`<div class="cb" style="--k:${col}"><i style="width:${Math.min(100,p)}%"></i><u style="left:${Math.min(100,p)}%"></u></div><small class="cr2" style="color:${col}">${t>c.cap?"Sforato di "+eur(t-c.cap):"Restano "+eur(c.cap-t)}</small>`:""}</div>`}).join("")||'<div class="emp">Aggiungi una categoria con ＋</div>';
   $("#al").innerHTML=al;
   $("#el").innerHTML=ex.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="it"><i class="cbar" style="background:${PC[x.who]||PC[0]}"></i><div class="av sq" title="${esc(S.names[x.who]||"")}" style="background-color:${(k=>k<0?"#b8b5c9":COL[k%COL.length])(S.cats.findIndex(c=>c.n===x.cat))}">${emo(S.cats.find(c=>c.n===x.cat)||{n:x.cat})}</div><div class="n" style="cursor:pointer" onclick="editExp('${x.id}')"><b>${esc(x.cat)}</b>${x.note?" · "+esc(x.note):""}<small>${x.date.slice(8)}/${x.date.slice(5,7)} · ${esc(S.names[x.who]||"?")}</small></div><b>${eur(x.amt)}</b><button class="x" onclick="delExp('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa in questo periodo</div>';
-  $("#ft").textContent=eur(fixT)+"/mese";
+  {const miss=S.fixed.filter(x=>!sk(x)&&!isOk(x)).reduce((s,x)=>s+x.amt,0),nm=S.fixed.filter(x=>!sk(x)&&!isOk(x)).length;$("#ft").textContent=eur(fixT)+"/mese · "+(nm?"mancano "+eur(miss):"tutte pagate ✓")}
   const FI={Mutuo:"home",Prestito:"bank",Abbonamento:"tv",Altro:"pin"};
-  $("#fl").innerHTML=S.fixed.map((x,i)=>`<div class="it${INV.test(x.n)?" inv":""}" style="${sk(x)?"opacity:.55":""}"><div class="av sq" style="background-color:${INV.test(x.n)?"#12b886":COL[(i+3)%COL.length]}">${ic(fixIcon(x))}</div><div class="n"><b>${esc(x.n)}</b>${sk(x)?"<small>Saltata in questo periodo</small>":x.sc?"<small>"+esc(x.t)+" · scadenza "+esc(x.sc)+"</small>":""}</div><b style="${sk(x)?"text-decoration:line-through":""}">${eur(x.amt)}</b><button class="sk" onclick="togSkip('${x.id}')">${sk(x)?"Ripristina":"Salta"}</button><button class="x" onclick="delFix('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa fissa</div>';
+  $("#fl").innerHTML=S.fixed.map((x,i)=>`<div class="it${INV.test(x.n)?" inv":""}" style="${sk(x)?"opacity:.55":""}"><button class="ck${isOk(x)&&!sk(x)?" on":""}" onclick="togOk('${x.id}')">${isOk(x)&&!sk(x)?ic("check"):""}</button><div class="av sq" style="background-color:${INV.test(x.n)?"#12b886":COL[(i+3)%COL.length]}">${ic(fixIcon(x))}</div><div class="n"><b>${esc(x.n)}</b>${sk(x)?"<small>Saltata in questo periodo</small>":x.sc?"<small>"+esc(x.t)+" · scadenza "+esc(x.sc)+"</small>":""}</div><b style="${sk(x)?"text-decoration:line-through":isOk(x)?"color:#0ca678":""}">${eur(x.amt)}</b><button class="sk" onclick="togSkip('${x.id}')">${sk(x)?"Ripristina":"Salta"}</button><button class="x" onclick="delFix('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna spesa fissa</div>';
   $("#sv").textContent=eur(pendT/12);
   $("#sd").textContent=pend.length?`${pend.length} spese da pagare · ${eur(pendT)} in tutto`:"Tutto pagato";
   $("#an").innerHTML=S.ann.map(x=>{const P=annParts(x),tt=P.reduce((s,q)=>s+q.amt,0),lf=P.filter(q=>!q.paid).reduce((s,q)=>s+q.amt,0);
