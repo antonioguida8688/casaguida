@@ -166,7 +166,7 @@ h2.sec{background:color-mix(in srgb,var(--c) 16%,transparent);border-left:6px so
 <div class="box" style="padding:12px"><div class="nt"><input id="dam" type="text" inputmode="decimal" placeholder="Importo €" onkeydown="if(event.key==='Enter')addDue()"><input id="ddt" type="date"></div><div class="nt" style="margin-top:8px"><input id="dno" placeholder="Nota (facoltativa)" onkeydown="if(event.key==='Enter')addDue()"><button class="pl" onclick="addDue()">Aggiungi</button></div></div>
 <div class="box" id="dpl" style="margin-top:10px"></div>
 <h2>Impostazioni</h2>
-<div class="box" style="padding:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueAmt()">Cambia importo mensile</button><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueStart()">Cambia mese di inizio</button></div>
+<div class="box" style="padding:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueAmt()">Cambia importo mensile</button><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueStart()">Cambia mese di inizio</button><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueEnd()">Cambia mese di fine</button></div>
 </div>
 <div class="foot"><div id="st"></div><button onclick="people()">Cambia i nomi</button> <button id="bkb" hidden onclick="backup()">Scarica copia dei dati</button> <button onclick="exportXlsx()">Esporta in Excel</button> <button onclick="document.getElementById('imf').click()">Importa dati</button><input id="imf" type="file" accept=".json,application/json" hidden onchange="importData(this)"></div>
 </main>
@@ -469,18 +469,20 @@ function togTodo(id){const x=cr().todo.find(t=>t.id===id);x.done=!x.done;save()}
 function delTodo(id){cr().todo=cr().todo.filter(t=>t.id!==id);save()}
 function addTodo(){const i=$("#nt"),v=i.value.trim();if(!v)return;cr().todo.push({id:uid(),t:v,done:false});i.value="";save()}
 function setTot(){pr("Costo totale della crociera (€)",cr().total,v=>{cr().total=parseFloat(v.replace(",","."))||cr().total;save()})}
-const due=()=>S.due||(S.due={amt:125,start:"2026-04",pays:[]});
+const due=()=>S.due||(S.due={amt:125,start:"2026-04",end:"2027-03",pays:[]});
 const dueMonths=()=>{const d=due(),[sy,sm]=d.start.split("-").map(Number),[cy,cm2]=pm(now.slice(0,10)).split("-").map(Number);return Math.max(0,(cy-sy)*12+(cm2-sm)+1)};
 function addDue(){const a=parseFloat($("#dam").value.replace(",","."));if(!(a>0)){toast("Scrivi un importo");return}due().pays.push({id:uid(),d:$("#ddt").value||now.slice(0,10),amt:a,note:$("#dno").value.trim()});$("#dam").value="";$("#dno").value="";save()}
 function delDue(id){due().pays=due().pays.filter(x=>x.id!==id);save()}
 function setDueAmt(){pr("Importo mensile da ricevere (€)",due().amt,v=>{const n=parseFloat(v.replace(",","."));if(n>0){due().amt=n;save()}})}
+const mDiff=(a,b)=>{const [ay,am]=a.split("-").map(Number),[by,bm]=b.split("-").map(Number);return (by-ay)*12+(bm-am)+1};
+function setDueEnd(){pr("Fino a quale mese? (formato AAAA-MM, es. 2027-03)",due().end||"2027-03",v=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v.trim())){due().end=v.trim();save()}else toast("Formato non valido")})}
 function setDueStart(){pr("Da quale mese? (formato AAAA-MM, es. 2026-11)",due().start,v=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v.trim())){due().start=v.trim();save()}else toast("Formato non valido")})}
 function renderDue(){
  if(!$("#dmiss"))return;
- const d=due(),mo=dueMonths(),tot=mo*d.amt,got=d.pays.reduce((s,x)=>s+x.amt,0),miss=tot-got,p=tot?Math.min(100,got/tot*100):0;
+ const d=due(),end=d.end||"2027-03",nt=Math.max(0,mDiff(d.start,end)),mo=Math.min(nt,dueMonths()),tot=nt*d.amt,mat=mo*d.amt,got=d.pays.reduce((s,x)=>s+x.amt,0),miss=tot-got,late=Math.max(0,mat-got),p=tot?Math.min(100,got/tot*100):0,fmt=k=>k.split("-").reverse().join("/");
  $("#dmiss").textContent=eur(Math.max(0,miss));
- $("#dsub").textContent=miss>0?"su "+eur(tot)+" dovuti fino a questo mese":miss<0?"In anticipo di "+eur(-miss):"Sei in pari ✓";
- $("#dsum").innerHTML=`<div class="pr"><div><small>Ricevuto</small><b>${eur(got)}</b></div><div style="text-align:right"><small>Dovuto (${mo} ${mo===1?"mese":"mesi"} × ${eur(d.amt)})</small><b>${eur(tot)}</b></div></div><div class="pb"><i style="width:${p}%"></i></div><div class="pr s"><span>${Math.round(p)}% ricevuto</span><b>${miss>0?"Mancano "+eur(miss):miss<0?"In anticipo "+eur(-miss):"In pari"}</b></div><div class="hint">Conteggio da ${d.start.split("-").reverse().join("/")}, un mese nuovo ogni 27 del mese. Questi soldi non entrano nel budget.</div>`;
+ $("#dsub").textContent=miss>0?"su "+eur(tot)+" totali ("+nt+" mesi × "+eur(d.amt)+")":miss<0?"Hai ricevuto "+eur(-miss)+" in più del totale":"Hai ricevuto tutto ✓";
+ $("#dsum").innerHTML=`<div class="pr"><div><small>Ricevuto</small><b>${eur(got)}</b></div><div style="text-align:right"><small>Totale da avere</small><b>${eur(tot)}</b></div></div><div class="pb"><i style="width:${p}%"></i></div><div class="pr s"><span>${Math.round(p)}% ricevuto</span><b>${miss>0?"Mancano "+eur(miss):"Completato"}</b></div><div class="hint">Periodo: da ${fmt(d.start)} a ${fmt(end)}.<br>Già scaduti fino a oggi: <b>${eur(mat)}</b>${late>0?" · ne mancano <b>"+eur(late)+"</b>":got>mat?" · sei in anticipo di <b>"+eur(got-mat)+"</b>":" · sei in pari"}.<br>Questi soldi non entrano nel budget.</div>`;
  if(!$("#ddt").value)$("#ddt").value=now.slice(0,10);
  $("#dpl").innerHTML=d.pays.slice().sort((a,b)=>(b.d||"").localeCompare(a.d||"")).map(x=>`<div class="it"><div class="av sq" style="background-color:#12b886">${ic("wallet")}</div><div class="n"><b>${eur(x.amt)}</b><small>${esc(x.note||"Ricevuto")}${x.d?" · "+x.d.split("-").reverse().join("/"):""}</small></div><button class="x" onclick="delDue('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessun incasso registrato</div>'}
 function renderCr(){
