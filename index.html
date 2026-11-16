@@ -165,6 +165,9 @@ h2.sec{background:color-mix(in srgb,var(--c) 16%,transparent);border-left:6px so
 <h2>Ho ricevuto</h2>
 <div class="box" style="padding:12px"><div class="nt"><input id="dam" type="text" inputmode="decimal" placeholder="Importo €" onkeydown="if(event.key==='Enter')addDue()"><input id="ddt" type="date"></div><div class="nt" style="margin-top:8px"><input id="dno" placeholder="Nota (facoltativa)" onkeydown="if(event.key==='Enter')addDue()"><button class="pl" onclick="addDue()">Aggiungi</button></div></div>
 <div class="box" id="dpl" style="margin-top:10px"></div>
+<h2>Altre entrate</h2>
+<div class="box" style="padding:12px"><div class="nt"><input id="exn" placeholder="Nome (es. Tredicesima, 730)" onkeydown="if(event.key===\'Enter\')addEx()"><input id="exa" type="text" inputmode="decimal" placeholder="€" style="max-width:90px" onkeydown="if(event.key===\'Enter\')addEx()"></div><div class="nt" style="margin-top:8px"><input id="exm" type="month"><button class="pl" onclick="addEx()">Aggiungi</button></div><small style="color:var(--mu);display:block;margin-top:6px">Il mese è facoltativo. Tocca il cerchio quando i soldi sono arrivati, tocca l’importo per cambiarlo.</small></div>
+<div class="box" id="exl" style="margin-top:10px"></div>
 <h2>Impostazioni</h2>
 <div class="box" style="padding:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueAmt()">Cambia importo mensile</button><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueStart()">Cambia mese di inizio</button><button class="pl" style="background:var(--tr);color:var(--tx);box-shadow:none" onclick="setDueEnd()">Cambia mese di fine</button></div>
 </div>
@@ -475,6 +478,10 @@ function addDue(){const a=parseFloat($("#dam").value.replace(",","."));if(!(a>0)
 function delDue(id){due().pays=due().pays.filter(x=>x.id!==id);save()}
 function setDueAmt(){pr("Importo mensile da ricevere (€)",due().amt,v=>{const n=parseFloat(v.replace(",","."));if(n>0){due().amt=n;save()}})}
 const mDiff=(a,b)=>{const [ay,am]=a.split("-").map(Number),[by,bm]=b.split("-").map(Number);return (by-ay)*12+(bm-am)+1};
+function addEx(){const n=$("#exn").value.trim(),a=parseFloat($("#exa").value.replace(",","."));if(!n||!(a>0)){toast("Scrivi nome e importo");return}(due().extra=due().extra||[]).push({id:uid(),n,amt:a,m:$("#exm").value||"",got:false});$("#exn").value="";$("#exa").value="";$("#exm").value="";save()}
+function togEx(id){const x=(due().extra||[]).find(t=>t.id===id);if(x){x.got=!x.got;save()}}
+function setExAmt(id){const x=(due().extra||[]).find(t=>t.id===id);if(x)pr("Importo di "+x.n+" (€)",x.amt||"",v=>{const n=parseFloat(v.replace(",","."));if(n>=0){x.amt=n;save()}})}
+function delEx(id){due().extra=(due().extra||[]).filter(x=>x.id!==id);save()}
 function setDueEnd(){pr("Fino a quale mese? (formato AAAA-MM, es. 2027-03)",due().end||"2027-03",v=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v.trim())){due().end=v.trim();save()}else toast("Formato non valido")})}
 function setDueStart(){pr("Da quale mese? (formato AAAA-MM, es. 2026-11)",due().start,v=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v.trim())){due().start=v.trim();save()}else toast("Formato non valido")})}
 function renderDue(){
@@ -483,6 +490,9 @@ function renderDue(){
  $("#dmiss").textContent=eur(Math.max(0,miss));
  $("#dsub").textContent=miss>0?"su "+eur(tot)+" totali ("+nt+" mesi × "+eur(d.amt)+")":miss<0?"Hai ricevuto "+eur(-miss)+" in più del totale":"Hai ricevuto tutto ✓";
  $("#dsum").innerHTML=`<div class="pr"><div><small>Ricevuto</small><b>${eur(got)}</b></div><div style="text-align:right"><small>Totale da avere</small><b>${eur(tot)}</b></div></div><div class="pb"><i style="width:${p}%"></i></div><div class="pr s"><span>${Math.round(p)}% ricevuto</span><b>${miss>0?"Mancano "+eur(miss):"Completato"}</b></div><div class="hint">Periodo: da ${fmt(d.start)} a ${fmt(end)}.<br>Già scaduti fino a oggi: <b>${eur(mat)}</b>${late>0?" · ne mancano <b>"+eur(late)+"</b>":got>mat?" · sei in anticipo di <b>"+eur(got-mat)+"</b>":" · sei in pari"}.<br>Questi soldi non entrano nel budget.</div>`;
+ if(!due().extra){due().extra=[{id:uid(),n:"Tredicesima",amt:1800,m:"2026-12",got:false},{id:uid(),n:"Premio di produzione",amt:0,m:"",got:false},{id:uid(),n:"730 (rimborso)",amt:850,m:"",got:false}];setTimeout(save,0)}
+ {const ex=due().extra||[],et=ex.reduce((q,x)=>q+x.amt,0),eg=ex.filter(x=>x.got).reduce((q,x)=>q+x.amt,0);
+  $("#exl").innerHTML=(ex.length?`<div class="pr s" style="padding:10px 4px 4px"><span>Ricevute ${eur(eg)} su ${eur(et)}</span><b>${et-eg>0?"Mancano "+eur(et-eg):"Tutto ricevuto ✓"}</b></div>`:"")+ex.slice().sort((a,b)=>(a.m||"9").localeCompare(b.m||"9")).map(x=>`<div class="it"><button class="ck${x.got?" on":""}" onclick="togEx('${x.id}')">${x.got?ic("check"):""}</button><div class="n" style="${x.got?"text-decoration:line-through;opacity:.55":""}"><b>${esc(x.n)}</b><small onclick="setExAmt('${x.id}')" style="text-decoration:underline dotted">${x.amt>0?eur(x.amt):"importo da inserire"}${x.m?" · "+x.m.split("-").reverse().join("/"):""}</small></div><button class="x" onclick="delEx('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessuna entrata aggiuntiva</div>'}
  if(!$("#ddt").value)$("#ddt").value=now.slice(0,10);
  $("#dpl").innerHTML=d.pays.slice().sort((a,b)=>(b.d||"").localeCompare(a.d||"")).map(x=>`<div class="it"><div class="av sq" style="background-color:#12b886">${ic("wallet")}</div><div class="n"><b>${eur(x.amt)}</b><small>${esc(x.note||"Ricevuto")}${x.d?" · "+x.d.split("-").reverse().join("/"):""}</small></div><button class="x" onclick="delDue('${x.id}')">✕</button></div>`).join("")||'<div class="emp">Nessun incasso registrato</div>'}
 function renderCr(){
