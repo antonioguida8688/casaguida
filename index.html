@@ -469,7 +469,7 @@ function togTodo(id){const x=cr().todo.find(t=>t.id===id);x.done=!x.done;save()}
 function delTodo(id){cr().todo=cr().todo.filter(t=>t.id!==id);save()}
 function addTodo(){const i=$("#nt"),v=i.value.trim();if(!v)return;cr().todo.push({id:uid(),t:v,done:false});i.value="";save()}
 function setTot(){pr("Costo totale della crociera (€)",cr().total,v=>{cr().total=parseFloat(v.replace(",","."))||cr().total;save()})}
-const due=()=>S.due||(S.due={amt:125,start:"2026-11",pays:[]});
+const due=()=>S.due||(S.due={amt:125,start:"2026-04",pays:[]});
 const dueMonths=()=>{const d=due(),[sy,sm]=d.start.split("-").map(Number),[cy,cm2]=pm(now.slice(0,10)).split("-").map(Number);return Math.max(0,(cy-sy)*12+(cm2-sm)+1)};
 function addDue(){const a=parseFloat($("#dam").value.replace(",","."));if(!(a>0)){toast("Scrivi un importo");return}due().pays.push({id:uid(),d:$("#ddt").value||now.slice(0,10),amt:a,note:$("#dno").value.trim()});$("#dam").value="";$("#dno").value="";save()}
 function delDue(id){due().pays=due().pays.filter(x=>x.id!==id);save()}
